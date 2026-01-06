@@ -1,14 +1,12 @@
 name: Auto Sync with Upstream and Patches
 
-# 在顶层添加 permissions 字段
 permissions:
-  contents: write  # 授予读取和写入仓库内容的权限 (write 权限隐含了 read)
-  # pull-requests: write # 如果你的工作流需要操作 PR，可以添加此项
+  contents: write
 
 on:
   schedule:
-    - cron: '0 2 * * *'
-  workflow_dispatch:
+    - cron: '0 2 * * *' # 每天凌晨2点运行
+  workflow_dispatch:   # 允许手动触发
 
 jobs:
   sync:
@@ -18,48 +16,41 @@ jobs:
     - name: Checkout self repo
       uses: actions/checkout@v4
       with:
-        # 使用 PAT 进行推送
-        token: ${{ secrets.GH_TOKEN }}
-        # 拉取所有历史，以便更好地合并
         fetch-depth: 0
+        # persist-credentials: false # 可选，但使用 GITHUB_TOKEN 时建议显式设置
 
-    - name: Configure Git
+    - name: Configure Git and Sync
       run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
+        # 1. 配置 Git 用户信息
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Add upstream and patch repositories
-      run: |
-        # 添加官方上游仓库 (1仓库)
+        # 2. 添加所有需要的远程源
         git remote add upstream https://github.com/immortalwrt/immortalwrt.git
-        # 添加提供补丁的仓库 (2仓库)
         git remote add patch_repo https://github.com/lkiuyu/immortalwrt.git
-        # 验证远程源
+        
+        # 验证远程源是否添加成功
+        echo "===== Remotes configured ====="
         git remote -v
+        echo "=============================="
 
-    - name: Fetch all remotes
-      run: |
+        # 3. 从所有远程源拉取最新信息
         git fetch upstream
         git fetch patch_repo
 
-    - name: Sync with upstream (immortalwrt)
-      run: |
+        # 4. 切换到主分支
         git checkout master
-        # 合并官方仓库的最新代码
+
+        # 5. 合并官方上游仓库的更新
+        echo "===== Merging upstream/master ====="
         git merge --no-edit upstream/master
 
-    - name: Sync with patch repo (lkiuyu)
-      run: |
-        # 合并补丁仓库的最新代码
-        # --allow-unrelated-histories 是一个保险措施，防止因历史不一致导致合并失败
-        git merge --no-edit --allow-unrelated-histories patch_repo/master
+        # 6. 合并补丁仓库的更新
+        echo "===== Merging patch_repo/master ====="
+        git merge --no-edit patch_repo/master
 
     - name: Push changes
-      run: |
-        # 检查是否有需要推送的更改
-        if [[ $(git status --porcelain) ]]; then
-          echo "Pushing changes to origin..."
-          git push origin master
-        else
-          echo "No changes to push."
-        fi
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: master
