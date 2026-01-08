@@ -55,7 +55,9 @@ jobs:
         mkdir openstick
         git clone https://github.com/lkiuyu/openstick-feeds.git
         mv  ./openstick-feeds/* ./openstick/
+        rm -rf openstick-feeds
         cd ..
+        git push origin master
 
     - name: Push changes
       uses: ad-m/github-push-action@master
