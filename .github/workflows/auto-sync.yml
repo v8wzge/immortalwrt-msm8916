@@ -49,6 +49,10 @@ jobs:
         echo "===== Merging patch_repo/master ====="
         git merge --no-edit patch_repo/master
 
+        # 7. 更新openstick-feeds
+        cd package
+        git clone https://github.com/lkiuyu/openstick-feeds.git
+
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
