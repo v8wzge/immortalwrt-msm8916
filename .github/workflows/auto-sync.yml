@@ -59,3 +59,7 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: master
+        force: false  # 优先用 false，如需强制推送改为 true
+      env:
+        # 推送前先拉取远程最新代码
+        GIT_PULL: true
