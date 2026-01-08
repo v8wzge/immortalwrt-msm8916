@@ -51,7 +51,10 @@ jobs:
 
         # 7. 更新openstick-feeds
         cd package
+        rm -rf openstick
+        mkdir openstick
         git clone https://github.com/lkiuyu/openstick-feeds.git
+        mv  ./openstick-feeds/* ./openstick/
         cd ..
 
     - name: Push changes
