@@ -52,6 +52,7 @@ jobs:
         # 7. 更新openstick-feeds
         cd package
         git clone https://github.com/lkiuyu/openstick-feeds.git
+        cd ..
 
     - name: Push changes
       uses: ad-m/github-push-action@master
